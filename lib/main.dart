@@ -11,12 +11,18 @@ Future<void> main() async {
 }
 
 class MyApp extends StatelessWidget {
+  // Database
   const MyApp({Key? key, required this.db}) : super(key: key);
   final AppDatabase db;
+
+  // Raiz da aplicação
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
       home: HomePage(
       db: db,
     ));

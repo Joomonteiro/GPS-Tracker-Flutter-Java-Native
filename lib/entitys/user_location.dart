@@ -10,5 +10,7 @@ class UserLocation {
   final double latitude;
   final double longitude;
 
-  UserLocation(this.id, this.latitude, this.longitude);
+  final int routeId;
+
+  UserLocation(this.id, this.latitude, this.longitude, this.routeId);
 }
