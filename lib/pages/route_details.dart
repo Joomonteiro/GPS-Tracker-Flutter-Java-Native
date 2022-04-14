@@ -82,7 +82,7 @@ class _RoutesListState extends State<RouteDetails> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Rotas",
+          "Locais da Rota",
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
