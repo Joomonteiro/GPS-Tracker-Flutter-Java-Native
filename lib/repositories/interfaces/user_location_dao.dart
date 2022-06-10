@@ -8,6 +8,9 @@ abstract class UserLocationDao {
   @Query('SELECT * FROM UserLocation')
   Future<List<UserLocation>> findAllUserLocation();
 
+  @Query('SELECT * FROM UserLocation WHERE routeId = :routeId')
+  Future<List<UserLocation>> findAllUserLocationByRouteId(int routeId);
+
   @Query('SELECT * FROM UserLocation WHERE id = :id')
   Stream<UserLocation?> findUserLocationById(int id);
 

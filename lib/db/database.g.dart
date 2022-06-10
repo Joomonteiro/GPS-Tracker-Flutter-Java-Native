@@ -63,6 +63,8 @@ class _$AppDatabase extends AppDatabase {
 
   UserLocationDao? _userLocationDaoInstance;
 
+  RouteEntityDao? _routeEntityDaoInstance;
+
   Future<sqflite.Database> open(String path, List<Migration> migrations,
       [Callback? callback]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
@@ -82,7 +84,9 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `UserLocation` (`id` INTEGER NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `UserLocation` (`id` INTEGER, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `routeId` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `RouteEntity` (`id` INTEGER, `name` TEXT NOT NULL, `time` TEXT NOT NULL, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -95,6 +99,12 @@ class _$AppDatabase extends AppDatabase {
     return _userLocationDaoInstance ??=
         _$UserLocationDao(database, changeListener);
   }
+
+  @override
+  RouteEntityDao get routeEntityDao {
+    return _routeEntityDaoInstance ??=
+        _$RouteEntityDao(database, changeListener);
+  }
 }
 
 class _$UserLocationDao extends UserLocationDao {
@@ -106,7 +116,8 @@ class _$UserLocationDao extends UserLocationDao {
             (UserLocation item) => <String, Object?>{
                   'id': item.id,
                   'latitude': item.latitude,
-                  'longitude': item.longitude
+                  'longitude': item.longitude,
+                  'routeId': item.routeId
                 },
             changeListener);
 
@@ -121,15 +132,33 @@ class _$UserLocationDao extends UserLocationDao {
   @override
   Future<List<UserLocation>> findAllUserLocation() async {
     return _queryAdapter.queryList('SELECT * FROM UserLocation',
-        mapper: (Map<String, Object?> row) => UserLocation(row['id'] as int,
-            row['latitude'] as double, row['longitude'] as double));
+        mapper: (Map<String, Object?> row) => UserLocation(
+            row['id'] as int?,
+            row['latitude'] as double,
+            row['longitude'] as double,
+            row['routeId'] as int));
+  }
+
+  @override
+  Future<List<UserLocation>> findAllUserLocationByRouteId(int routeId) async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM UserLocation WHERE routeId = ?1',
+        mapper: (Map<String, Object?> row) => UserLocation(
+            row['id'] as int?,
+            row['latitude'] as double,
+            row['longitude'] as double,
+            row['routeId'] as int),
+        arguments: [routeId]);
   }
 
   @override
   Stream<UserLocation?> findUserLocationById(int id) {
     return _queryAdapter.queryStream('SELECT * FROM UserLocation WHERE id = ?1',
-        mapper: (Map<String, Object?> row) => UserLocation(row['id'] as int,
-            row['latitude'] as double, row['longitude'] as double),
+        mapper: (Map<String, Object?> row) => UserLocation(
+            row['id'] as int?,
+            row['latitude'] as double,
+            row['longitude'] as double,
+            row['routeId'] as int),
         arguments: [id],
         queryableName: 'UserLocation',
         isView: false);
@@ -139,5 +168,58 @@ class _$UserLocationDao extends UserLocationDao {
   Future<void> insertUserLocation(UserLocation UserLocation) async {
     await _userLocationInsertionAdapter.insert(
         UserLocation, OnConflictStrategy.abort);
+  }
+}
+
+class _$RouteEntityDao extends RouteEntityDao {
+  _$RouteEntityDao(this.database, this.changeListener)
+      : _queryAdapter = QueryAdapter(database, changeListener),
+        _routeEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'RouteEntity',
+            (RouteEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'name': item.name,
+                  'time': item.time
+                },
+            changeListener);
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<RouteEntity> _routeEntityInsertionAdapter;
+
+  @override
+  Future<List<RouteEntity>> findAllRouteEntity() async {
+    return _queryAdapter.queryList('SELECT * FROM RouteEntity',
+        mapper: (Map<String, Object?> row) => RouteEntity(
+            row['id'] as int?, row['name'] as String, row['time'] as String));
+  }
+
+  @override
+  Stream<RouteEntity?> findRouteEntityById(int id) {
+    return _queryAdapter.queryStream('SELECT * FROM RouteEntity WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => RouteEntity(
+            row['id'] as int?, row['name'] as String, row['time'] as String),
+        arguments: [id],
+        queryableName: 'RouteEntity',
+        isView: false);
+  }
+
+  @override
+  Future<List<RouteEntity>> findLastRouteEntity() async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM RouteEntity ORDER BY id DESC LIMIT 1',
+        mapper: (Map<String, Object?> row) => RouteEntity(
+            row['id'] as int?, row['name'] as String, row['time'] as String));
+  }
+
+  @override
+  Future<void> insertRouteEntity(RouteEntity routeEntity) async {
+    await _routeEntityInsertionAdapter.insert(
+        routeEntity, OnConflictStrategy.abort);
   }
 }
