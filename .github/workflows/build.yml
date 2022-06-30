@@ -1,0 +1,30 @@
+on:
+  push:
+    tags-ignore:
+      - '**'
+    branches:
+      - '**'
+name: Flutter integration test
+jobs:
+  drive_android:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        api-level: [29]
+        target: [playstore]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: subosito/flutter-action@v1
+        with:
+          flutter-version: '2.10.4'
+          channel: 'stable'
+
+      # Run build
+      - name: Run Flutter build
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          target: ${{ matrix.target }}
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          profile: Nexus 6
+          script: flutter build
