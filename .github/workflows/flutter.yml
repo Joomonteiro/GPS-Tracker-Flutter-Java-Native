@@ -1,25 +1,30 @@
-# This is a basic workflow to help you get started with Actions
-
-name: Flutter action
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
+    tags-ignore:
+      - '**'
+    branches:
+      - '**'
+name: Flutter integration test
 jobs:
- build:
-   runs-on: windows-latest
-   steps:
-     - uses: actions/checkout@v3
-     - uses: subosito/flutter-action@v2
-       with:
-         channel: 'beta'
-     - run: flutter config --enable-windows-desktop
-     - run: flutter test
+  drive_android:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        api-level: [29]
+        target: [playstore]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: subosito/flutter-action@v1
+        with:
+          flutter-version: '2.10.4'
+          channel: 'stable'
+
+      # Run integration test
+      - name: Run Flutter Driver tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          target: ${{ matrix.target }}
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          profile: Nexus 6
+          script: flutter drive --driver=integration_test/app_test.dart
